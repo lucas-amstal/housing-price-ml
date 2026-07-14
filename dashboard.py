@@ -11,7 +11,10 @@ Two things live here:
 
 Run with:
     streamlit run dashboard.py
-(train a model first with `python src/train.py` if models/model.joblib doesn't exist yet)
+
+If models/model.joblib doesn't exist yet (e.g. a fresh clone on Streamlit
+Community Cloud, where `python src/train.py` never runs), this dashboard
+trains it automatically on first load.
 """
 import json
 import sys
@@ -33,7 +36,18 @@ st.set_page_config(page_title="California Housing Price Model", layout="wide")
 @st.cache_resource
 def load_model():
     if not MODEL_PATH.exists():
-        return None
+        with st.spinner("No trained model found yet — training one now (first run only, ~10s)..."):
+            try:
+                from train import train
+
+                train()
+            except Exception as exc:
+                st.error(
+                    f"Automatic training failed: {exc}\n\n"
+                    "This usually means the dataset couldn't be downloaded "
+                    "(needs internet access from wherever this app is running)."
+                )
+                return None
     return joblib.load(MODEL_PATH)
 
 
@@ -81,10 +95,7 @@ def main():
 
     model = load_model()
     if model is None:
-        st.warning(
-            "No trained model found at `models/model.joblib`.\n\n"
-            "Train one first:\n\n```\npython src/train.py\n```"
-        )
+        st.warning("Couldn't load or train a model — see the error above.")
         return
 
     metadata = load_metadata()
