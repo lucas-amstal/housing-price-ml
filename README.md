@@ -1,6 +1,6 @@
 # housing-price-ml
 
-An end-to-end ML project: train a house-price model on a real public dataset, track experiments with MLflow, and serve predictions through a FastAPI endpoint.
+An end-to-end ML project: train a house-price model on a real public dataset, track experiments with MLflow, serve predictions through a FastAPI endpoint, and explore it all in an interactive Streamlit dashboard.
 
 ## Why this project
 
@@ -17,13 +17,15 @@ sklearn.datasets.fetch_california_housing()  (real public data, auto-downloaded)
         ▼
    mlruns/  (MLflow tracking store)          models/model.joblib (serialized model for serving)
                                                        │
-                                                       ▼
-                                              app/main.py (FastAPI)
-                                                       │
-                                                POST /predict  ->  {"predicted_value": ...}
+                                              ┌────────┴────────┐
+                                              ▼                 ▼
+                                     app/main.py (FastAPI)   dashboard.py (Streamlit)
+                                              │                 │
+                                       POST /predict      interactive prediction form +
+                                                           metrics + feature importance
 ```
 
-**Stack:** scikit-learn, MLflow, FastAPI, Docker. All open source.
+**Stack:** scikit-learn, MLflow, FastAPI, Streamlit, Docker. All open source.
 
 ## Running it
 
@@ -67,6 +69,18 @@ docker run -p 8000:8000 housing-price-ml
 
 (the Docker image trains the model at build time so it's ready to serve immediately)
 
+## Dashboard
+
+```bash
+python src/train.py   # if you haven't already
+streamlit run dashboard.py
+```
+
+Gives you an interactive form to try predictions against the trained model, plus the last
+run's metrics (MAE/RMSE/R²), feature importances, and an actual-vs-predicted scatter plot
+(the scatter plot needs the dataset to be reachable to rebuild the test set; the rest of the
+dashboard works fully offline off the saved model).
+
 ## Project layout
 
 ```
@@ -80,6 +94,7 @@ housing-price-ml/
 │   ├── main.py        # FastAPI app with /predict and /health
 │   └── schemas.py     # pydantic request/response models
 ├── models/             # trained model artifact (generated, gitignored)
+├── dashboard.py         # Streamlit dashboard
 └── tests/
     ├── test_data.py
     ├── test_train.py

@@ -1,4 +1,4 @@
-.PHONY: train serve mlflow-ui test
+.PHONY: train serve mlflow-ui dashboard test
 
 train:
 	python src/train.py
@@ -8,6 +8,9 @@ serve:
 
 mlflow-ui:
 	mlflow ui
+
+dashboard:
+	streamlit run dashboard.py
 
 test:
 	pip install -r requirements.txt pytest httpx
